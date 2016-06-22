@@ -73,24 +73,24 @@ class ProductController extends Controller
      */
     public function actionCreate() {
         $model = new Product();
-        
-      /*  echo '<pre>';
-        var_dump($model);
-        echo '</pre>';
-        exit();*/
+
+        /*  echo '<pre>';
+          var_dump($model);
+          echo '</pre>';
+          exit(); */
 
         if ($model->load(Yii::$app->request->post())) {
 
             //get the instance of the uploaded file
             $imageName = strtolower($model->name);
             $model->file = UploadedFile::getInstance($model, 'file');
-            
-            $randNumber = mt_rand(10, 1000);        
-            $model->file->saveAs('images/products/' . $imageName . $randNumber. '.' . $model->file->extension);
+
+            $randNumber = mt_rand(10, 1000);
 
             //save the path in the db column
-            $model->picture = 'images/products/' . $imageName . $randNumber. '.' . $model->file->extension;
+            $model->picture = 'images/products/' . $imageName . $randNumber . '.' . $model->file->extension;
             $model->save();
+            $model->file->saveAs('images/products/' . $imageName . $randNumber . '.' . $model->file->extension);
 
             return $this->redirect(['view', 'id' => $model->id]);
         } else {
@@ -109,8 +109,20 @@ class ProductController extends Controller
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
+        $previousPicture = $pictureUrl = Yii::$app->basePath.'/web/'. $model->picture;
 
-        if ($model->load(Yii::$app->request->post()) && $model->save()) {
+        if ($model->load(Yii::$app->request->post())) {
+             //get the instance of the uploaded file
+            $imageName = strtolower($model->name);
+            $model->file = UploadedFile::getInstance($model, 'file');
+
+            $randNumber = mt_rand(10, 1000);
+
+            //save the path in the db column
+            $model->picture = 'images/products/' . $imageName . $randNumber . '.' . $model->file->extension;
+            $model->save();
+            $model->file->saveAs('images/products/' . $imageName . $randNumber . '.' . $model->file->extension);
+            unlink($previousPicture);
             return $this->redirect(['view', 'id' => $model->id]);
         } else {
             return $this->render('update', [
