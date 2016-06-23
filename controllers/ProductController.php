@@ -4,6 +4,8 @@ namespace app\controllers;
 
 use Yii;
 use app\models\Product;
+use app\models\Category;
+use app\models\CategoryMap;
 use app\models\ProductSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
@@ -72,30 +74,59 @@ class ProductController extends Controller
      * @return mixed
      */
     public function actionCreate() {
-        $model = new Product();
+       $category = new Category();
+        $product = new Product();
+        $map = new CategoryMap();
+      
+        if (Yii::$app->request->post()) {
+            $dbTransaction = Yii::$app->db->beginTransaction();
+            $postData = Yii::$app->request->post();
 
-        /*  echo '<pre>';
-          var_dump($model);
-          echo '</pre>';
-          exit(); */
+            if (isset($postData['_csrf']) && isset($postData['Product']) && isset($postData['Category'])) {
 
-        if ($model->load(Yii::$app->request->post())) {
+                $newProduct['_csrf'] = $postData['_csrf'];
+                $newProduct['Product'] = $postData['Product'];
+                $newCategory['_csrf'] = $postData['_csrf'];
+                $newCategory['Category'] = $postData['Category'];      
+                $newMap['_csrf'] = $postData['_csrf'];
 
-            //get the instance of the uploaded file
-            $imageName = strtolower($model->name);
-            $model->file = UploadedFile::getInstance($model, 'file');
+                try {
+                    $product->load($newProduct);
 
-            $randNumber = mt_rand(10, 1000);
+                    //get the instance of the uploaded file
+                    $imageName = strtolower($product->name);
+                    $product->file = UploadedFile::getInstance($product, 'file');
+                    $randNumber = mt_rand(10, 1000);
+                    //save the path in the db column
+                    $product->picture = 'images/products/' . $imageName . $randNumber . '.' . $product->file->extension;
+                    $product->save();
 
-            //save the path in the db column
-            $model->picture = 'images/products/' . $imageName . $randNumber . '.' . $model->file->extension;
-            $model->save();
-            $model->file->saveAs('images/products/' . $imageName . $randNumber . '.' . $model->file->extension);
-
-            return $this->redirect(['view', 'id' => $model->id]);
+                   // $newProductId = Yii::$app->db->getLastInsertID();
+                    $newMap['CategoryMap']['product_id'] = Yii::$app->db->getLastInsertID();
+                    
+                    foreach ($newCategory['Category']['name'] as $categoryId) {
+                        $newMap['CategoryMap']['category_id'] = $categoryId;                  
+                        $map->load($newMap);                   
+                        $map->save();             
+                        $map = new CategoryMap();                 
+                    }
+                   
+                    $product->file->saveAs('images/products/' . $imageName . $randNumber . '.' . $product->file->extension);
+                    $dbTransaction->commit();
+                    return $this->redirect(['view', 'id' => $product->id]);
+ 
+                } catch (Exception $e) {
+                    $dbTransaction->rollBack();
+                    echo 'Exception';    
+                }
+            }else
+            {
+                echo 'Post data from form is corrupted !!!';
+            }
         } else {
             return $this->render('create', [
-                        'model' => $model,
+                        'product' => $product,
+                        'category' => $category
             ]);
         }
     }

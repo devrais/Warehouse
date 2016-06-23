@@ -11,8 +11,6 @@ $this->params['breadcrumbs'][] = ['label' => 'Products', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 
 $photoInfo = $model->PictureInfo;
-/*print_r($photoInfo['url']);
-exit();*/
 ?>
 <div class="product-view">
 
@@ -37,10 +35,18 @@ exit();*/
             'description',
             'price',
             [
+              'attribute' => 'category',
+                'value'=> $model->ListOfCategories
+            ],
+            [
                 'format' => ['image',['style'=> "width:100%", 'height' => '400']],
                 'attribute' => 'picture',
                 'value' => ($photoInfo['url'])
-            ]
+            ],
+           /* [
+               'attribute' => 'category',
+                'value' =>  
+            ]*/
         ],
     ])
     ?>

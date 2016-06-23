@@ -58,6 +58,28 @@ class Product extends \yii\db\ActiveRecord
         ];
     }
     
+     /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getCategoryMaps()
+    {
+        return $this->hasMany(CategoryMap::className(), ['product_id' => 'id'])->with(['category']);
+    }
+    
+    public function getListOfCategories()
+    {
+        $categoryList = '';
+        $relationData = $this->categoryMaps;
+        if (count($relationData) > 1) {
+            foreach ($relationData as $key => $object) {
+                $categoryList .=  $object->category->name . ' ';
+            }
+            return $categoryList;
+        } else {
+            return $relationData[0]->category->name;
+        }
+    }
+    
     public function getPictureInfo()
     {
         $path = Url::to('@webroot/images/products/');
