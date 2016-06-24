@@ -7,6 +7,7 @@ use app\models\Product;
 use app\models\Category;
 use app\models\CategoryMap;
 use app\models\ProductSearch;
+use app\components\managers\Manager;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
@@ -39,16 +40,8 @@ class ProductController extends Controller
     public function actionIndex()
     {
         
-     /*   $ext = pathinfo('images/products/Computer.png', PATHINFO_EXTENSION);
-        print_r($ext);
-        exit();*/
-        
         $searchModel = new ProductSearch();
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
-      /*   echo '<pre>';
-  print_r(Yii::$app->request->queryParams);
-  echo '</pre>';
-    exit();*/
 
         return $this->render('index', [
             'searchModel' => $searchModel,
@@ -75,53 +68,58 @@ class ProductController extends Controller
      */
     public function actionCreate() {
        $category = new Category();
-        $product = new Product();
-        $map = new CategoryMap();
-      
-        if (Yii::$app->request->post()) {
-            $dbTransaction = Yii::$app->db->beginTransaction();
-            $postData = Yii::$app->request->post();
+       $product = new Product();
+       $map = new CategoryMap();
+       $postData = Yii::$app->request->post();
 
-            if (isset($postData['_csrf']) && isset($postData['Product']) && isset($postData['Category'])) {
-
-                $newProduct['_csrf'] = $postData['_csrf'];
-                $newProduct['Product'] = $postData['Product'];
-                $newCategory['_csrf'] = $postData['_csrf'];
-                $newCategory['Category'] = $postData['Category'];      
-                $newMap['_csrf'] = $postData['_csrf'];
-
-                try {
-                    $product->load($newProduct);
-
+        if (isset($postData['_csrf']) && isset($postData['Product']) && isset($postData['Category'])) {
+            $newProduct['_csrf'] = $postData['_csrf'];
+            $newProduct['Product'] = $postData['Product'];
+            $newMap['_csrf'] = $postData['_csrf'];
+            $categories = $postData['Category']['name'];
+            try {
+                $dbTransaction = Yii::$app->db->beginTransaction();
+                if ($product->load($newProduct)) {
                     //get the instance of the uploaded file
                     $imageName = strtolower($product->name);
                     $product->file = UploadedFile::getInstance($product, 'file');
-                    $randNumber = mt_rand(10, 1000);
-                    //save the path in the db column
-                    $product->picture = 'images/products/' . $imageName . $randNumber . '.' . $product->file->extension;
-                    $product->save();
-
-                   // $newProductId = Yii::$app->db->getLastInsertID();
-                    $newMap['CategoryMap']['product_id'] = Yii::$app->db->getLastInsertID();
-                    
-                    foreach ($newCategory['Category']['name'] as $categoryId) {
-                        $newMap['CategoryMap']['category_id'] = $categoryId;                  
-                        $map->load($newMap);                   
-                        $map->save();             
-                        $map = new CategoryMap();                 
+                    if (empty($product->file)) {
+                        $product->picture = $product->DefaulPicture;
+                    } else {
+                        $randNumber = mt_rand(10, 1000);
+                        //save the path in the db column
+                        $product->picture = 'images/products/' . $imageName . $randNumber . '.' . $product->file->extension;
                     }
-                   
-                    $product->file->saveAs('images/products/' . $imageName . $randNumber . '.' . $product->file->extension);
-                    $dbTransaction->commit();
-                    return $this->redirect(['view', 'id' => $product->id]);
- 
-                } catch (Exception $e) {
+
+                    $product->save();
+                    $newMap['CategoryMap']['product_id'] = Yii::$app->db->getLastInsertID();
+
+                    foreach ($categories as $categoryId) {
+                        $newMap['CategoryMap']['category_id'] = $categoryId;
+                        if ($map->load($newMap)) {
+                            $map->save();
+                            $map = new CategoryMap();
+                        } else {
+                            $dbTransaction->rollBack();
+                            echo 'MAP fail';
+                            exit();
+                        }
+                    }
+                } else {
                     $dbTransaction->rollBack();
-                    echo 'Exception';    
+                    echo 'Product fail';
+                    exit();
                 }
-            }else
-            {
-                echo 'Post data from form is corrupted !!!';
+                
+                if(!empty($product->file))
+                {
+                      $product->file->saveAs('images/products/' . $imageName . $randNumber . '.' . $product->file->extension);
+                }
+                $dbTransaction->commit();
+                return $this->redirect(['view', 'id' => $product->id]);
+            } catch (Exception $e) {
+                $dbTransaction->rollBack();
+                echo 'Exception';
             }
         } else {
             return $this->render('create', [
@@ -137,27 +135,59 @@ class ProductController extends Controller
      * @param integer $id
      * @return mixed
      */
-    public function actionUpdate($id)
-    {
-        $model = $this->findModel($id);
-        $previousPicture = $pictureUrl = Yii::$app->basePath.'/web/'. $model->picture;
+    public function actionUpdate($id) {
+        $product = $this->findModel($id);
+        $category = new Category();
 
-        if ($model->load(Yii::$app->request->post())) {
-             //get the instance of the uploaded file
-            $imageName = strtolower($model->name);
-            $model->file = UploadedFile::getInstance($model, 'file');
+        if (Yii::$app->request->post()) {
+            $updatedData = Yii::$app->request->post();
+            $updatedProduct = [];
+            $oldCategories = [];
+            $previousPicture = $product->picture;
+            $updatedProduct['Product'] = $updatedData['Product'];
+            $updatedProduct['_csrf'] = $updatedData['_csrf'];
 
-            $randNumber = mt_rand(10, 1000);
+            if (!($product->CategoryIndexes == $updatedData['Category']['name'])) {
+                $manager = new Manager();
+                $manager->updateProductCategories($product->CategoryIndexes, $updatedData['Category']['name'], $product->ProductId);
+                if (($product->name == $updatedData['Product']['name']) && ($product->description == $updatedData['Product']['description']) 
+                        && ($product->price == $updatedData['Product']['price']) && (empty(UploadedFile::getInstance($product, 'file')))) {
+                    return $this->redirect(['view', 'id' => $product->id]);
+                }
+            }
 
-            //save the path in the db column
-            $model->picture = 'images/products/' . $imageName . $randNumber . '.' . $model->file->extension;
-            $model->save();
-            $model->file->saveAs('images/products/' . $imageName . $randNumber . '.' . $model->file->extension);
-            unlink($previousPicture);
-            return $this->redirect(['view', 'id' => $model->id]);
+            if (empty(UploadedFile::getInstance($product, 'file'))) {
+                $updatedProduct['Product']['picture'] = $previousPicture;
+
+                if ($product->load($updatedProduct)) {
+                    $product->save();
+                    return $this->redirect(['view', 'id' => $product->id]);
+                }
+            } else {
+                $newFile = UploadedFile::getInstance($product, 'file');
+                $ext = pathinfo($newFile, PATHINFO_EXTENSION);
+                $randNumber = mt_rand(10, 1000);
+                $imageName = strtolower($product->name);
+                //save the path in the db column
+                $updatedProduct['Product']['picture'] = 'images/products/' . $imageName . $randNumber . '.' . $ext;
+
+                if ($product->load($updatedProduct)) {
+                    $product->save();
+                    $product->file = $newFile;
+                    $product->file->saveAs($updatedProduct['Product']['picture']);
+
+                    //   $product->file->saveAs('images/products/' . $imageName . $randNumber . '.' . $product->file->extension);
+                   if($previousPicture != '/images/products/default-product.jpg')
+                   {                                        
+                    unlink(Yii::$app->basePath.'/web/'.$previousPicture);
+                   }
+                    return $this->redirect(['view', 'id' => $product->id]);
+                }
+            }
         } else {
             return $this->render('update', [
-                'model' => $model,
+                        'product' => $product,
+                        'category' => $category
             ]);
         }
     }
@@ -169,10 +199,13 @@ class ProductController extends Controller
      * @return mixed
      */
     public function actionDelete($id)
-    {      
-        $pictureUrl = Yii::$app->basePath.'/web/'. $this->findModel($id)->picture;
+ {      $deletedProductPicture = $this->findModel($id)->picture;
+        CategoryMap::deleteAll(['product_id' => $id]);
         $this->findModel($id)->delete();
-        unlink($pictureUrl);
+        if($deletedProductPicture != '/images/products/default-product.jpg')
+        {
+        unlink(Yii::$app->basePath . '/web/' . $deletedProductPicture);
+        }
         return $this->redirect(['index']);
     }
 

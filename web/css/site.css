@@ -113,3 +113,7 @@ a.desc:after {
     max-width: 150px;
     margin-bottom: 10px;
 }
+
+.checkbox-inline {
+  margin-bottom: 20px;
+}

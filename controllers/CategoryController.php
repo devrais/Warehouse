@@ -5,6 +5,7 @@ namespace app\controllers;
 use Yii;
 use app\models\Category;
 use app\models\CategorySearch;
+use app\models\CategoryMap;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
@@ -101,8 +102,8 @@ class CategoryController extends Controller
      */
     public function actionDelete($id)
     {
+        CategoryMap::deleteAll(['category_id' => $id]);
         $this->findModel($id)->delete();
-
         return $this->redirect(['index']);
     }
 

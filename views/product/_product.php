@@ -20,6 +20,7 @@ $detailLink = Url::toRoute(['/product/view','id'=>$model->id]);
     <li><span>Product Name:</span> <?=$model->name?></li>
     <li><span>Description:</span> <?=$model->description?></li>
     <li><span>Price:</span> <?=$model->price?></li>
+    <li><span>Category:</span> <?=$model->ProductCategories?></li>
 </ul>
 
 <p><?=Html::a('View complete product description',$detailLink)?></p>

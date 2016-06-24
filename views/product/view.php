@@ -36,17 +36,13 @@ $photoInfo = $model->PictureInfo;
             'price',
             [
               'attribute' => 'category',
-                'value'=> $model->ListOfCategories
+                'value'=> $model->ProductCategories
             ],
             [
                 'format' => ['image',['style'=> "width:100%", 'height' => '400']],
                 'attribute' => 'picture',
                 'value' => ($photoInfo['url'])
             ],
-           /* [
-               'attribute' => 'category',
-                'value' =>  
-            ]*/
         ],
     ])
     ?>
