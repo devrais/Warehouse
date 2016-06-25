@@ -12,6 +12,9 @@ use app\models\Product;
  */
 class ProductSearch extends Product
 {
+    public $beginPrice;
+    public $endPrice;
+    public $category;
     /**
      * @inheritdoc
      */
@@ -20,7 +23,8 @@ class ProductSearch extends Product
         return [
             [['id'], 'integer'],
             [['name', 'description', 'picture'], 'safe'],
-            [['price'], 'number'],
+            [['price', 'beginPrice', 'endPrice'], 'number'],
+            [['category'],'string']
         ];
     }
 
@@ -45,6 +49,8 @@ class ProductSearch extends Product
         $query = Product::find();
 
         // add conditions that should always apply here
+        
+         $query->joinWith(['categoryMaps.category']);
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
@@ -60,13 +66,14 @@ class ProductSearch extends Product
 
         // grid filtering conditions
         $query->andFilterWhere([
-            'id' => $this->id,
-            'price' => $this->price,
+            'Category.name' => $this->category
         ]);
 
         $query->andFilterWhere(['like', 'name', $this->name])
-            ->andFilterWhere(['like', 'description', $this->description])
-            ->andFilterWhere(['like', 'picture', $this->picture]);
+                ->andFilterWhere(['like', 'description', $this->description])
+                ->andFilterWhere(['like', 'picture', $this->picture])
+                ->andFilterWhere(['>=', 'price', $this->beginPrice])
+                ->andFilterWhere(['<=', 'price', $this->endPrice]);
 
         return $dataProvider;
     }

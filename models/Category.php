@@ -28,9 +28,9 @@ class Category extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['name'], 'required'],
+            [['category'], 'required'],
            // [['name'],'string','max'=> 50]
-            ['name', 'validateCategoryName']
+            ['category', 'validateCategoryName']
             
         ];
     }
@@ -42,7 +42,7 @@ class Category extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
-            'name' => 'Category Name',
+            'category' => 'Category Name',
         ];
     }
 
