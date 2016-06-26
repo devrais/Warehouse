@@ -28,9 +28,8 @@ class Category extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['category'], 'required'],
-           // [['name'],'string','max'=> 50]
-            ['category', 'validateCategoryName']
+            [['name'],'required'],
+            ['name', 'validateCategoryName']
             
         ];
     }
@@ -42,7 +41,7 @@ class Category extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
-            'category' => 'Category Name',
+            'name' => 'Category Name',
         ];
     }
 
@@ -54,21 +53,20 @@ class Category extends \yii\db\ActiveRecord
         return $this->hasMany(CategoryMap::className(), ['category_id' => 'id']);
     }
     
-    public function validateCategoryName($attribute, $params)
-    {
-       if(is_array($this->$attribute))
-       {
-           foreach($this->$attribute as $value)
-           {
-               if(!is_string($value))
-               {
-                   $this->addError($attribute, 'List need to contain values type-string');
-               }
-           }
-       }elseif(!is_string($this->$attribute))
-       {
-          $this->addError($attribute, 'Category name is not valid'); 
-       }
-        
+    public function validateCategoryName($attribute, $params) {
+        if (empty($this->$attribute)) {
+            $this->addError($attribute, 'Empty');
+        } else {
+            if (is_array($this->$attribute)) {
+                foreach ($this->$attribute as $value) {
+                    if (!is_string($value)) {
+                        $this->addError($attribute, 'List need to contain values type-string');
+                    }
+                }
+            } elseif (!is_string($this->$attribute)) {
+                $this->addError($attribute, 'Category name is not valid');
+            }
+        }
     }
+
 }

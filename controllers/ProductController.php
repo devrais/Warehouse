@@ -12,6 +12,8 @@ use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\web\UploadedFile;
+use yii\filters\AccessControl;
+use yii\web\ForbiddenHttpException;
 
 /**
  * ProductController implements the CRUD actions for Product model.
@@ -21,8 +23,7 @@ class ProductController extends Controller
     /**
      * @inheritdoc
      */
-    public function behaviors()
-    {
+    public function behaviors() {
         return [
             'verbs' => [
                 'class' => VerbFilter::className(),
@@ -30,6 +31,35 @@ class ProductController extends Controller
                     'delete' => ['POST'],
                 ],
             ],
+            'access' => [
+                'class' => AccessControl::className(),
+                'only' => ['update', 'delete', 'create'],
+                'rules' => [
+                    [
+                        'allow' => true,
+                        'actions' => ['update', 'create'],
+                        'roles' => ['worker', 'manager' . 'owner']
+                    ],
+                    [
+                        'allow' => true,
+                        'actions' => ['delete'],
+                        'roles' => ['manager', 'owner']
+                    ]
+                ],
+                'denyCallback' => function($rule, $action) {
+            if ($action->id == 'delete') {
+                throw new ForbiddenHttpException('Only managers and owners can delete products.');
+            } elseif ($action->id == 'update') {
+                throw new ForbiddenHttpException('Only workers, managers and owners can update products.');
+            } elseif ($action->id == 'create') {
+                throw new ForbiddenHttpException('Only owners and managers can create products.');
+            } else {
+                if (Yii::$app->user->isGuest) {
+                    Yii::$app->user->loginRequired();
+                }
+            }
+        }
+            ]
         ];
     }
 
@@ -69,58 +99,23 @@ class ProductController extends Controller
     public function actionCreate() {
        $category = new Category();
        $product = new Product();
-       $map = new CategoryMap();
        $postData = Yii::$app->request->post();
-
+       $newId=''; 
+       $manager = new Manager();
+       
         if (isset($postData['_csrf']) && isset($postData['Product']) && isset($postData['Category'])) {
             $newProduct['_csrf'] = $postData['_csrf'];
             $newProduct['Product'] = $postData['Product'];
             $newMap['_csrf'] = $postData['_csrf'];
             $categories = $postData['Category']['name'];
-            try {
-                $dbTransaction = Yii::$app->db->beginTransaction();
-                if ($product->load($newProduct)) {
-                    //get the instance of the uploaded file
-                    $imageName = strtolower($product->name);
-                    $product->file = UploadedFile::getInstance($product, 'file');
-                    if (empty($product->file)) {
-                        $product->picture = $product->DefaulPicture;
-                    } else {
-                        $randNumber = mt_rand(10, 1000);
-                        //save the path in the db column
-                        $product->picture = 'images/products/' . $imageName . $randNumber . '.' . $product->file->extension;
-                    }
-
-                    $product->save();
-                    $newMap['CategoryMap']['product_id'] = Yii::$app->db->getLastInsertID();
-
-                    foreach ($categories as $categoryId) {
-                        $newMap['CategoryMap']['category_id'] = $categoryId;
-                        if ($map->load($newMap)) {
-                            $map->save();
-                            $map = new CategoryMap();
-                        } else {
-                            $dbTransaction->rollBack();
-                            echo 'MAP fail';
-                            exit();
-                        }
-                    }
-                } else {
-                    $dbTransaction->rollBack();
-                    echo 'Product fail';
-                    exit();
-                }
-                
-                if(!empty($product->file))
-                {
-                      $product->file->saveAs('images/products/' . $imageName . $randNumber . '.' . $product->file->extension);
-                }
-                $dbTransaction->commit();
-                return $this->redirect(['view', 'id' => $product->id]);
-            } catch (Exception $e) {
-                $dbTransaction->rollBack();
-                echo 'Exception';
-            }
+            
+            $newId = $manager->createProductWithCategory($newProduct, $newMap, $categories);
+            if ($newId) {
+                return $this->redirect(['view', 'id' =>$newId ]);
+            } else {
+                Yii::$app->getSession()->setFlash('error', 'Failed to create Product !!!');
+                return $this->redirect(['create']);
+            }         
         } else {
             return $this->render('create', [
                         'product' => $product,
@@ -138,50 +133,38 @@ class ProductController extends Controller
     public function actionUpdate($id) {
         $product = $this->findModel($id);
         $category = new Category();
+        $newRelaionId = '';
+        $newProductId = '';
 
         if (Yii::$app->request->post()) {
             $updatedData = Yii::$app->request->post();
             $updatedProduct = [];
-            $oldCategories = [];
             $previousPicture = $product->picture;
             $updatedProduct['Product'] = $updatedData['Product'];
-            $updatedProduct['_csrf'] = $updatedData['_csrf'];
+            $updatedProduct['_csrf'] = $updatedData['_csrf'];    
+            $manager = new Manager();
 
             if (!($product->CategoryIndexes == $updatedData['Category']['name'])) {
-                $manager = new Manager();
-                $manager->updateProductCategories($product->CategoryIndexes, $updatedData['Category']['name'], $product->ProductId);
-                if (($product->name == $updatedData['Product']['name']) && ($product->description == $updatedData['Product']['description']) 
-                        && ($product->price == $updatedData['Product']['price']) && (empty(UploadedFile::getInstance($product, 'file')))) {
-                    return $this->redirect(['view', 'id' => $product->id]);
-                }
-            }
-
-            if (empty(UploadedFile::getInstance($product, 'file'))) {
-                $updatedProduct['Product']['picture'] = $previousPicture;
-
-                if ($product->load($updatedProduct)) {
-                    $product->save();
-                    return $this->redirect(['view', 'id' => $product->id]);
+                $newRelaionId = $manager->updateProductCategories($product->CategoryIndexes, $updatedData['Category']['name'], $product->ProductId);
+                if (($newRelaionId) && (($product->name == $updatedData['Product']['name']) && ($product->description == $updatedData['Product']['description']) 
+                        && ($product->price == $updatedData['Product']['price']) && (empty(UploadedFile::getInstance($product, 'file'))))) {
+                    return $this->redirect(['view', 'id' => $newRelaionId]);
+                } else {
+                    $newProductId = $manager->updateProduct($updatedProduct, $product);
+                    if ($newProductId) {
+                        return $this->redirect(['view', 'id' => $newProductId]);
+                    } else {
+                        Yii::$app->getSession()->setFlash('error', 'Failed to update Product !!!');
+                        return $this->redirect(['update']);
+                    }
                 }
             } else {
-                $newFile = UploadedFile::getInstance($product, 'file');
-                $ext = pathinfo($newFile, PATHINFO_EXTENSION);
-                $randNumber = mt_rand(10, 1000);
-                $imageName = strtolower($product->name);
-                //save the path in the db column
-                $updatedProduct['Product']['picture'] = 'images/products/' . $imageName . $randNumber . '.' . $ext;
-
-                if ($product->load($updatedProduct)) {
-                    $product->save();
-                    $product->file = $newFile;
-                    $product->file->saveAs($updatedProduct['Product']['picture']);
-
-                    //   $product->file->saveAs('images/products/' . $imageName . $randNumber . '.' . $product->file->extension);
-                   if($previousPicture != '/images/products/default-product.jpg')
-                   {                                        
-                    unlink(Yii::$app->basePath.'/web/'.$previousPicture);
-                   }
-                    return $this->redirect(['view', 'id' => $product->id]);
+                $newProductId = $manager->updateProduct($updatedProduct, $product);
+                if ($newProductId) {
+                    return $this->redirect(['view', 'id' => $newProductId]);
+                } else {
+                    Yii::$app->getSession()->setFlash('error', 'Failed to update Product !!!');
+                    return $this->redirect(['update']);
                 }
             }
         } else {

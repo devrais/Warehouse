@@ -11,7 +11,13 @@ use app\models\Category;
 ?>
 
 <div class="product-form">
-
+ 
+     <?php
+    foreach (Yii::$app->session->getAllFlashes() as $key => $message) {
+        echo "<div class='alert alert-danger'>" . $message . "</div>";
+    }
+    ?>
+    
     <?php $form = ActiveForm::begin(['options' => ['enctype' => 'multipart/form-data']]); ?>
     
      <?= $form->field($category, 'name')->dropDownList($product->ExistingCategories, ['multiple' => 'true']) ?>

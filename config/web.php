@@ -15,8 +15,14 @@ $config = [
             'class' => 'yii\caching\FileCache',
         ],
         'user' => [
-            'identityClass' => 'app\models\User',
+            'identityClass' => 'app\models\Employee',
             'enableAutoLogin' => true,
+        ],
+        'security' => [
+            'passwordHashStrategy' => 'password_hash'
+        ],
+        'authManager' => [
+            'class' => 'yii\rbac\PhpManager'
         ],
         'errorHandler' => [
             'errorAction' => 'site/error',

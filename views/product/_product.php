@@ -13,7 +13,7 @@ $detailLink = Url::toRoute(['/product/view','id'=>$model->id]);
 ?>
 
 <figure>
-    <?=Html::a($photo,$detailLink,['class'=>'profile-thumb'])?>
+    <?=Html::a($photo,$photoInfo['url'],['class'=>'profile-thumb'])?>
 </figure>
 
 <ul class="details">

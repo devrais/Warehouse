@@ -117,3 +117,19 @@ a.desc:after {
 .checkbox-inline {
   margin-bottom: 20px;
 }
+
+.sorter {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.sorter:before {
+    content: 'Sort By:';
+    font-weight: bold;
+}
+
+.sorter li {
+    display: inline-block;
+    margin-left: 20px;
+}
+

@@ -54,6 +54,17 @@ class ProductSearch extends Product
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
+            'sort' => [
+                'attributes' => [
+                    'name',
+                    'description',
+                    'picture',
+                    'price'
+                ]
+            ],
+           /* 'pagination' =>[
+                'pageSize' => 3
+            ]*/
         ]);
 
         $this->load($params);
@@ -69,7 +80,7 @@ class ProductSearch extends Product
             'Category.name' => $this->category
         ]);
 
-        $query->andFilterWhere(['like', 'name', $this->name])
+        $query->andFilterWhere(['like', 'Product.name', $this->name])
                 ->andFilterWhere(['like', 'description', $this->description])
                 ->andFilterWhere(['like', 'picture', $this->picture])
                 ->andFilterWhere(['>=', 'price', $this->beginPrice])

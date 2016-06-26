@@ -3,9 +3,8 @@
 namespace app\controllers;
 
 use Yii;
-use app\models\Category;
-use app\models\CategorySearch;
-use app\models\CategoryMap;
+use app\models\Employee;
+use app\models\EmployeeSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
@@ -13,9 +12,9 @@ use yii\filters\AccessControl;
 use yii\web\ForbiddenHttpException;
 
 /**
- * CategoryController implements the CRUD actions for Category model.
+ * EmployeeController implements the CRUD actions for Employee model.
  */
-class CategoryController extends Controller
+class EmployeeController extends Controller
 {
     /**
      * @inheritdoc
@@ -36,7 +35,7 @@ class CategoryController extends Controller
                     [
                         'allow' => true,
                         'actions' => ['update', 'create'],
-                        'roles' => ['manager' , 'owner']
+                        'roles' => [ 'owner']
                     ],
                     [
                         'allow' => true,
@@ -46,11 +45,11 @@ class CategoryController extends Controller
                 ],
                 'denyCallback' => function($rule, $action) {
             if ($action->id == 'delete') {
-                throw new ForbiddenHttpException('Only owner can delete categories.');
+                throw new ForbiddenHttpException('Only owners can delete employees.');
             } elseif ($action->id == 'update') {
-                throw new ForbiddenHttpException('Only owners and managers can delete categories.');
+                throw new ForbiddenHttpException('Only owners can delete employees.');
             } elseif ($action->id == 'create') {
-                throw new ForbiddenHttpException('Only owners and managers can create categories.');
+                throw new ForbiddenHttpException('Only owners can create employees.');
             } else {
                 if (Yii::$app->user->isGuest) {
                     Yii::$app->user->loginRequired();
@@ -62,12 +61,12 @@ class CategoryController extends Controller
     }
 
     /**
-     * Lists all Category models.
+     * Lists all Employee models.
      * @return mixed
      */
     public function actionIndex()
     {
-        $searchModel = new CategorySearch();
+        $searchModel = new EmployeeSearch();
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
 
         return $this->render('index', [
@@ -77,7 +76,7 @@ class CategoryController extends Controller
     }
 
     /**
-     * Displays a single Category model.
+     * Displays a single Employee model.
      * @param integer $id
      * @return mixed
      */
@@ -89,13 +88,14 @@ class CategoryController extends Controller
     }
 
     /**
-     * Creates a new Category model.
+     * Creates a new Employee model.
      * If creation is successful, the browser will be redirected to the 'view' page.
      * @return mixed
      */
     public function actionCreate()
     {
-        $model = new Category();
+        $model = new Employee();
+      //  $model->hashPassword = true;
 
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
             return $this->redirect(['view', 'id' => $model->id]);
@@ -107,7 +107,7 @@ class CategoryController extends Controller
     }
 
     /**
-     * Updates an existing Category model.
+     * Updates an existing Employee model.
      * If update is successful, the browser will be redirected to the 'view' page.
      * @param integer $id
      * @return mixed
@@ -126,28 +126,28 @@ class CategoryController extends Controller
     }
 
     /**
-     * Deletes an existing Category model.
+     * Deletes an existing Employee model.
      * If deletion is successful, the browser will be redirected to the 'index' page.
      * @param integer $id
      * @return mixed
      */
     public function actionDelete($id)
     {
-        CategoryMap::deleteAll(['category_id' => $id]);
         $this->findModel($id)->delete();
+
         return $this->redirect(['index']);
     }
 
     /**
-     * Finds the Category model based on its primary key value.
+     * Finds the Employee model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
      * @param integer $id
-     * @return Category the loaded model
+     * @return Employee the loaded model
      * @throws NotFoundHttpException if the model cannot be found
      */
     protected function findModel($id)
     {
-        if (($model = Category::findOne($id)) !== null) {
+        if (($model = Employee::findOne($id)) !== null) {
             return $model;
         } else {
             throw new NotFoundHttpException('The requested page does not exist.');
