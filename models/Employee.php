@@ -35,9 +35,11 @@ class Employee extends ActiveRecord implements IdentityInterface
     {
         return [
             [['name', 'email', 'username', 'password', 'position'], 'required'],
-            [['name', 'username', 'password'], 'string', 'max' => 100, 'min'=> 4],
+            [['name', 'username'], 'string', 'max' => 100, 'min'=> 4],
             [['email'],'email'],
-            [['position'],'string']
+            [['position'],'string'],
+            [['username'], 'unique'],
+            [['password'], 'string', 'min' => 5]
         ];
     }
 

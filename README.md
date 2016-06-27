@@ -138,7 +138,7 @@ If on Linux:
 ./yii employee/load-employees
 ~~~
 
-If on Windows using XAMPP bash:
+If on Windows using XAMPP shell:
 
 ~~~
 php yii employee/load-employees
