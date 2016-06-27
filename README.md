@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 Credy - Software developer position's test tasks
 ============================
 
@@ -154,9 +153,9 @@ Employee Model is used for "USER AUTHENTICATION"
 "Warehouse" has 3 types of employees - workers, managers and owners. Everyone has their own permissions for using the "Warehouse" (see rbac folder).
  Password for every employee is "123456". I suggest using "Andrei" with username "devrais" because he has the "owner" position (like admin).
 
-Workers can create, update, delete products.
-Managers can do everything that workers can and create, update categories. Cant delete categories
-Owners can do everything like super user. 
+- Workers can create, update, delete products.
+- Managers can do everything that workers can and create, update categories. Cant delete categories
+- Owners can do everything like super user. 
 
 ### Category
 
