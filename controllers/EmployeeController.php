@@ -28,7 +28,7 @@ class EmployeeController extends Controller
                     'delete' => ['POST'],
                 ],
             ],
-           /*  'access' => [
+             'access' => [
                 'class' => AccessControl::className(),
                 'only' => ['update', 'delete', 'create'],
                 'rules' => [
@@ -56,7 +56,7 @@ class EmployeeController extends Controller
                 }
             }
         }
-            ]*/
+            ]
         ];
     }
 

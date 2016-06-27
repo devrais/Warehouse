@@ -29,7 +29,7 @@ class CategoryController extends Controller
                     'delete' => ['POST'],
                 ],
             ],
-           /*  'access' => [
+             'access' => [
                 'class' => AccessControl::className(),
                 'only' => ['update', 'delete', 'create'],
                 'rules' => [
@@ -57,7 +57,7 @@ class CategoryController extends Controller
                 }
             }
         }
-            ]*/
+            ]
         ];
     }
 

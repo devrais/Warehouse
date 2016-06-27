@@ -34,12 +34,15 @@ Download url:
 https://github.com/devrais/Warehouse.git
 ~~~
 
+You will download "Warehouse-master.zip" Extract contents and put them into "basic" folder. Put "basic" folder on your server.
+
+
 INSTALLATION
 ------------
 
-### Download files to your server
+### Download "Vendor" files to project
 
-After download you will need to install "Vendor" files using the following command:
+I did not upload "Vendor" files because it is not recommended.After you added the project to the server install "Vendor" files using the following command:
 
 ~~~
 composer update
@@ -127,7 +130,7 @@ Sql code is also available in db/sql.txt
 
 ### Import Employyes
 
-In "commands" folder use "EmployeeController.php" to import employees using console commands.
+Use console command to import employees to database
 
 If on Linux:
 
@@ -155,7 +158,7 @@ Employee Model is used for "USER AUTHENTICATION"
 
 - Workers can create, update, delete products.
 - Managers can do everything that workers can and create, update categories. Cant delete categories
-- Owners can do everything like super user. 
+- Owners can do everything including add employees (like super user) 
 
 ### Category
 

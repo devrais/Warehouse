@@ -31,14 +31,14 @@ class ProductController extends Controller
                     'delete' => ['POST'],
                 ],
             ],
-          /*  'access' => [
+            'access' => [
                 'class' => AccessControl::className(),
                 'only' => ['update', 'delete', 'create'],
                 'rules' => [
                     [
                         'allow' => true,
                         'actions' => ['update', 'create'],
-                        'roles' => ['worker', 'manager' . 'owner']
+                        'roles' => ['worker', 'manager' , 'owner']
                     ],
                     [
                         'allow' => true,
@@ -59,7 +59,7 @@ class ProductController extends Controller
                 }
             }
         }
-            ]*/
+            ]
         ];
     }
 
