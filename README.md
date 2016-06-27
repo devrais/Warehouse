@@ -13,16 +13,18 @@ There should be possibility to add and remove new employees to the system. Produ
 contain picture, description, price and whatever.
 
 We'd like to see from your work:
-•Yii2 Framework
-•MySQL
-•AJAX
-•Clean HTML and CSS
-•Publish on GitHub/Bitbucket
+
+Yii2 Framework
+MySQL
+AJAX
+Clean HTML and CSS
+Publish on GitHub/Bitbucket
 
 USED TOOLS
 ----------
 
 Project was done on Ubuntu operation system
+
 Server: XAMPP 5.6.21 / PHP 5.6.21
 
 
@@ -38,7 +40,7 @@ https://github.com/devrais/Warehouse.git
 INSTALLATION
 ------------
 
-### Install from an Archive File
+### Download files to your server
 
 After download you will need to install "Vendor" files using the following command:
 
@@ -128,7 +130,7 @@ Sql code is also available in db/sql.txt
 
 ### Import Employyes
 
-In "commands" folder use "EmployeeController.php" to import employees.
+In "commands" folder use "EmployeeController.php" to import employees using console commands.
 
 If on Linux:
 
@@ -151,8 +153,12 @@ STRUCTURE
 
 Employee Model is used for "USER AUTHENTICATION"
 
-"Warehouse" has 3 types of employees - workers, managers and owners. Everyone has their own permissions for using the "Warehouse".
+"Warehouse" has 3 types of employees - workers, managers and owners. Everyone has their own permissions for using the "Warehouse" (see rbac folder).
  Password for every employee is "123456". I suggest using "Andrei" with username "devrais" because he has the "owner" position (like admin).
+
+Workers can create, update, delete products.
+Managers can do everything that workers can and create, update categories. Cant delete categories
+Owners can do everything like super user. 
 
 ### Category
 
