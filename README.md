@@ -12,21 +12,19 @@ many categories of products. Such case is possible that one product belongs to m
 There should be possibility to add and remove new employees to the system. Product should
 contain picture, description, price and whatever.
 
-We'd like to see from your work:
+**We'd like to see from your work:**
 
-Yii2 Framework
-MySQL
-AJAX
-Clean HTML and CSS
-Publish on GitHub/Bitbucket
+- Yii2 Framework
+- MySQL
+- AJAX
+- Clean HTML and CSS
+- Publish on GitHub/Bitbucket
 
 USED TOOLS
 ----------
 
-Project was done on Ubuntu operation system
-
-Server: XAMPP 5.6.21 / PHP 5.6.21
-
+- Project was done on Ubuntu operation system
+- Server: XAMPP 5.6.21 / PHP 5.6.21
 
 DOWNLOAD PROJECT
 -------------------
