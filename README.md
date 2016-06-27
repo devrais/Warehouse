@@ -1,98 +1,70 @@
 <<<<<<< HEAD
-Yii 2 Basic Project Template
+Credy - Software developer position's test tasks
 ============================
 
-Yii 2 Basic Project Template is a skeleton [Yii 2](http://www.yiiframework.com/) application best for
-rapidly creating small projects.
+Task 2
+Write from scratch an application in PHP called “Warehouse”.
 
-The template contains the basic features including user login/logout and a contact page.
-It includes all commonly used configurations that would allow you to focus on adding new
-features to your application.
+Description
 
-[![Latest Stable Version](https://poser.pugx.org/yiisoft/yii2-app-basic/v/stable.png)](https://packagist.org/packages/yiisoft/yii2-app-basic)
-[![Total Downloads](https://poser.pugx.org/yiisoft/yii2-app-basic/downloads.png)](https://packagist.org/packages/yiisoft/yii2-app-basic)
-[![Build Status](https://travis-ci.org/yiisoft/yii2-app-basic.svg?branch=master)](https://travis-ci.org/yiisoft/yii2-app-basic)
+There is warehouse with many employees who can add/edit/delete products to stock. Also there are
+many categories of products. Such case is possible that one product belongs to many categories.
+There should be possibility to add and remove new employees to the system. Product should
+contain picture, description, price and whatever.
 
-DIRECTORY STRUCTURE
+We'd like to see from your work:
+•Yii2 Framework
+•MySQL
+•AJAX
+•Clean HTML and CSS
+•Publish on GitHub/Bitbucket
+
+USED TOOLS
+----------
+
+Project was done on Ubuntu operation system
+Server: XAMPP 5.6.21 / PHP 5.6.21
+
+
+DOWNLOAD PROJECT
 -------------------
 
-      assets/             contains assets definition
-      commands/           contains console commands (controllers)
-      config/             contains application configurations
-      controllers/        contains Web controller classes
-      mail/               contains view files for e-mails
-      models/             contains model classes
-      runtime/            contains files generated during runtime
-      tests/              contains various tests for the basic application
-      vendor/             contains dependent 3rd-party packages
-      views/              contains view files for the Web application
-      web/                contains the entry script and Web resources
+Download url: 
 
-
-
-REQUIREMENTS
-------------
-
-The minimum requirement by this project template that your Web server supports PHP 5.4.0.
-
+~~~
+https://github.com/devrais/Warehouse.git
+~~~
 
 INSTALLATION
 ------------
 
 ### Install from an Archive File
 
-Extract the archive file downloaded from [yiiframework.com](http://www.yiiframework.com/download/) to
-a directory named `basic` that is directly under the Web root.
+After download you will need to install "Vendor" files using the following command:
 
-Set cookie validation key in `config/web.php` file to some random secret string:
+~~~
+composer update
+~~~
 
-```php
-'request' => [
-    // !!! insert a secret key in the following (if it is empty) - this is required by cookie validation
-    'cookieValidationKey' => '<secret random string goes here>',
-],
-```
-
-You can then access the application through the following URL:
+Now you should be able to access the application through the following URL, assuming basic is the directory directly under the Web root.
 
 ~~~
 http://localhost/basic/web/
 ~~~
-
-
-### Install via Composer
-
-If you do not have [Composer](http://getcomposer.org/), you may install it by following the instructions
-at [getcomposer.org](http://getcomposer.org/doc/00-intro.md#installation-nix).
-
-You can then install this project template using the following command:
-
-~~~
-php composer.phar global require "fxp/composer-asset-plugin:~1.1.1"
-php composer.phar create-project --prefer-dist --stability=dev yiisoft/yii2-app-basic basic
-~~~
-
-Now you should be able to access the application through the following URL, assuming `basic` is the directory
-directly under the Web root.
-
-~~~
-http://localhost/basic/web/
-~~~
-
 
 CONFIGURATION
 -------------
 
 ### Database
 
-Edit the file `config/db.php` with real data, for example:
+You will use "warehouse" database to store your data
 
 ```php
 return [
     'class' => 'yii\db\Connection',
-    'dsn' => 'mysql:host=localhost;dbname=yii2basic',
+    'dsn' => 'mysql:host=127.0.0.1;dbname=warehouse',
     'username' => 'root',
-    'password' => '1234',
+    'password' => '',
     'charset' => 'utf8',
 ];
 ```
@@ -100,5 +72,104 @@ return [
 **NOTES:**
 - Yii won't create the database for you, this has to be done manually before you can access it.
 - Check and edit the other files in the `config/` directory to customize your application as required.
-- Refer to the README in the `tests` directory for information specific to basic application tests.
+
+### Create tables
+
+Create tables in this order !!!
+
+```sql
+CREATE TABLE `Employee` (
+	`id` INT(11) NOT NULL AUTO_INCREMENT,
+	`name` VARCHAR(100) NOT NULL,
+	`email` VARCHAR(100) NOT NULL,
+	`username` VARCHAR(100) NOT NULL,
+	`password` VARCHAR(100) NOT NULL,
+	`position` VARCHAR(100) NOT NULL,
+	PRIMARY KEY (`id`)
+)
+COLLATE='utf8_general_ci'
+ENGINE=InnoDB;
+
+CREATE TABLE `Product` (
+	`id` INT(11) NOT NULL AUTO_INCREMENT,
+	`name` VARCHAR(50) NOT NULL,
+	`description` TEXT NOT NULL,
+	`picture` VARCHAR(200) NOT NULL,
+	`price` DECIMAL(10,2) NOT NULL,
+	PRIMARY KEY (`id`)
+)
+COLLATE='utf8_general_ci'
+ENGINE=InnoDB;
+
+CREATE TABLE `Category` (
+	`id` INT(11) NOT NULL AUTO_INCREMENT,
+	`name` VARCHAR(50) NOT NULL,
+	PRIMARY KEY (`id`)
+)
+COLLATE='utf8_general_ci'
+ENGINE=InnoDB;
+
+CREATE TABLE `CategoryMap` (
+	`id` INT(11) NOT NULL AUTO_INCREMENT,
+	`product_id` INT(11) NOT NULL,
+	`category_id` INT(11) NOT NULL,
+	PRIMARY KEY (`id`),
+	INDEX `product_id` (`product_id`),
+	INDEX `category_id` (`category_id`),
+	CONSTRAINT `CategoryMap_ibfk_1` FOREIGN KEY (`product_id`) REFERENCES `Product` (`id`),
+	CONSTRAINT `CategoryMap_ibfk_2` FOREIGN KEY (`category_id`) REFERENCES `Category` (`id`)
+)
+COLLATE='utf8_general_ci'
+ENGINE=InnoDB;
+```
+Sql code is also available in db/sql.txt
+
+"Product" table and "Category" table are connected by "CategoryMap" table 
+
+### Import Employyes
+
+In "commands" folder use "EmployeeController.php" to import employees.
+
+If on Linux:
+
+~~~
+./yii employee/load-employees
+~~~
+
+If on Windows using XAMPP bash:
+
+~~~
+php yii employee/load-employees
+~~~
+
+Password for every employee is "123456". I suggest using "Andrei" with username "devrais" because he has the "owner" status (like admin).
+
+STRUCTURE
+-------------
+
+### Employees
+
+Employee Model is used for "USER AUTHENTICATION"
+
+"Warehouse" has 3 types of employees - workers, managers and owners. Everyone has their own permissions for using the "Warehouse".
+ Password for every employee is "123456". I suggest using "Andrei" with username "devrais" because he has the "owner" position (like admin).
+
+### Category
+
+Category Model adds new categories to "warehouse". Only managers and owner can create new categories. WITHOUT categories you CANT add new products.
+
+### CategoryMap
+
+CategoryMap model creates relation between categories and products. This allows products to have different categories.
+
+### Products
+
+Products Models adds new products to "warehouse".
+
+### Manager.php
+
+Since every product can have different categories, product create and update require complex logic for it.
+For this I created additional "helper" class in components/managers/Manager.php
+
+Everything else is traditional MVC structure.
 

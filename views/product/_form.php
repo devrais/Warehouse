@@ -29,7 +29,6 @@ use app\models\Category;
          <label class="checkbox-inline">       
             <input type="checkbox" value="" id="radio-update-picture" onchange="enableFileInput();">Insert picture 
         </label>
- <?//= Html::checkbox($product->isNewRecord ? 'Add Picture', ['id'='radio-update-picture', 'onchange'='enableFileInput()'] : 'Update Picture', ['id'='radio-update-picture', 'onchange'='enableFileInput()']) ?>
     
     <?= $form->field($product, 'file')->fileInput(['disabled'=>'disabled']) ?>
 

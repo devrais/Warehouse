@@ -29,7 +29,7 @@ class CategoryController extends Controller
                     'delete' => ['POST'],
                 ],
             ],
-             'access' => [
+           /*  'access' => [
                 'class' => AccessControl::className(),
                 'only' => ['update', 'delete', 'create'],
                 'rules' => [
@@ -48,7 +48,7 @@ class CategoryController extends Controller
             if ($action->id == 'delete') {
                 throw new ForbiddenHttpException('Only owner can delete categories.');
             } elseif ($action->id == 'update') {
-                throw new ForbiddenHttpException('Only owners and managers can delete categories.');
+                throw new ForbiddenHttpException('Only owners and managers can update categories.');
             } elseif ($action->id == 'create') {
                 throw new ForbiddenHttpException('Only owners and managers can create categories.');
             } else {
@@ -57,7 +57,7 @@ class CategoryController extends Controller
                 }
             }
         }
-            ]
+            ]*/
         ];
     }
 

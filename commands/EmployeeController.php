@@ -44,7 +44,6 @@ class EmployeeController extends Controller {
         
          foreach ($employeeData as $data) {
             $employee = new Employee($data);
-           // $employee->hashPassword = true;
             $employee->save();
         }
         

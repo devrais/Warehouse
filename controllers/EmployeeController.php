@@ -28,7 +28,7 @@ class EmployeeController extends Controller
                     'delete' => ['POST'],
                 ],
             ],
-             'access' => [
+           /*  'access' => [
                 'class' => AccessControl::className(),
                 'only' => ['update', 'delete', 'create'],
                 'rules' => [
@@ -47,7 +47,7 @@ class EmployeeController extends Controller
             if ($action->id == 'delete') {
                 throw new ForbiddenHttpException('Only owners can delete employees.');
             } elseif ($action->id == 'update') {
-                throw new ForbiddenHttpException('Only owners can delete employees.');
+                throw new ForbiddenHttpException('Only owners can update employees.');
             } elseif ($action->id == 'create') {
                 throw new ForbiddenHttpException('Only owners can create employees.');
             } else {
@@ -56,7 +56,7 @@ class EmployeeController extends Controller
                 }
             }
         }
-            ]
+            ]*/
         ];
     }
 

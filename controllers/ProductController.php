@@ -31,7 +31,7 @@ class ProductController extends Controller
                     'delete' => ['POST'],
                 ],
             ],
-            'access' => [
+          /*  'access' => [
                 'class' => AccessControl::className(),
                 'only' => ['update', 'delete', 'create'],
                 'rules' => [
@@ -52,14 +52,14 @@ class ProductController extends Controller
             } elseif ($action->id == 'update') {
                 throw new ForbiddenHttpException('Only workers, managers and owners can update products.');
             } elseif ($action->id == 'create') {
-                throw new ForbiddenHttpException('Only owners and managers can create products.');
+                throw new ForbiddenHttpException('Only workers, managers and owners can create products.');
             } else {
                 if (Yii::$app->user->isGuest) {
                     Yii::$app->user->loginRequired();
                 }
             }
         }
-            ]
+            ]*/
         ];
     }
 
