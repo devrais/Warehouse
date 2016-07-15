@@ -20,7 +20,7 @@ use app\models\Category;
     
     <?php $form = ActiveForm::begin(['options' => ['enctype' => 'multipart/form-data']]); ?>
     
-     <?= $form->field($category, 'name')->dropDownList($product->ExistingCategories, ['multiple' => 'true']) ?>
+     <?= $form->field($product, 'category')->dropDownList($product->ExistingCategories, ['multiple' => 'true']) ?>
     
     <?= $form->field($product, 'name')->textInput(['maxlength' => true]) ?>
 

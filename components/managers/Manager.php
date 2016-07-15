@@ -3,20 +3,22 @@
 namespace app\components\managers;
 
 use Yii;
-use app\models\CategoryMap;
 use app\models\Product;
+use app\models\Category;
 use yii\web\UploadedFile;
+use yii\helpers\FileHelper;
+use yii\base\Exception;
 
 class Manager {
 
-    public function updateProductCategories($existingValues, $postValues, $productId) {
-        $map = new CategoryMap();
+    public function updateProductCategories($existingValues, $postNewCategories, $product, $productId) {
         $deleteList = [];
         $newIndexList = [];
-        $postNewMap = [];
 
-        $deleteList = self::getDeleteList($existingValues, $postValues);
-        $newIndexList = self::getNewIndexList($existingValues, $postValues);
+        if (!empty($postNewCategories)) {
+            $deleteList = self::getDeleteList($existingValues, $postNewCategories);
+            $newIndexList = self::getNewIndexList($existingValues, $postNewCategories);
+        }
 
         $dbTransaction = Yii::$app->db->beginTransaction();
         try {
@@ -25,94 +27,50 @@ class Manager {
                         ->createCommand()
                         ->delete('CategoryMap', ['product_id' => $productId, 'category_id' => $deleteList])
                         ->execute();
+            } else {
+                Yii::$app->db
+                        ->createCommand()
+                        ->delete('CategoryMap', ['product_id' => $productId])
+                        ->execute();
             }
 
-            foreach ($newIndexList as $value) {
-                $postNewMap['CategoryMap']['product_id'] = $productId;
-                $postNewMap['CategoryMap']['category_id'] = $value;
-                $postNewMap['_csrf'] = Yii::$app->request->csrfToken;
-                if ($map->load($postNewMap) && $map->save()) {
-                    $map = new CategoryMap();
-                } else {
-                    Yii::$app->getSession()->setFlash('error', 'Failed to save category ' . $map->name);
-                    $dbTransaction->rollBack();
-                }
+            foreach ($newIndexList as $categoryId) {
+                $category = Category::findOne($categoryId);
+                $product->link('categories', $category);
             }
             $dbTransaction->commit();
-            return $productId;
+            return true;
         } catch (Exception $ex) {
             $dbTransaction->rollBack();
             return false;
         }
     }
 
-    public function updateProduct($updatedProduct, $product) {
-        
-        $previousPicture = $product->picture;
-        if (empty(UploadedFile::getInstance($product, 'file'))) {
-            $updatedProduct['Product']['picture'] = $previousPicture;
-
-            if ($product->load($updatedProduct) && $product->save()) {
-                return $product->id;
-            } else {
-                return false;
-            }
-        } else {
-            $newFile = UploadedFile::getInstance($product, 'file');
-            $ext = pathinfo($newFile, PATHINFO_EXTENSION);
-            $randNumber = mt_rand(10, 1000);
-            $imageName = strtolower($product->name);
-            //save the path in the db column
-            $updatedProduct['Product']['picture'] = 'images/products/' . $imageName . $randNumber . '.' . $ext;
-
-            if ($product->load($updatedProduct) && $product->save()) {
-                $product->file = $newFile;
-                $product->file->saveAs($updatedProduct['Product']['picture']);
-
-                //   $product->file->saveAs('images/products/' . $imageName . $randNumber . '.' . $product->file->extension);
-                if ($previousPicture != '/images/products/default-product.jpg') {
-                    unlink(Yii::$app->basePath . '/web/' . $previousPicture);
-                }
-                return $product->id;
-            } else {
-                return false;
-            }
-        }
-    }
-
-    public function createProductWithCategory($newProduct, $newMap, $categories) {
-
+    public function createProductWithCategory($newProduct) {
         $product = new Product();
-        $map = new CategoryMap();
-
         try {
             $dbTransaction = Yii::$app->db->beginTransaction();
             if ($product->load($newProduct)) {
-                //get the instance of the uploaded file
                 $imageName = strtolower($product->name);
                 $product->file = UploadedFile::getInstance($product, 'file');
+                // If we do not have picture upload default
                 if (empty($product->file)) {
                     $product->picture = $product->DefaulPicture;
                 } else {
-                    $randNumber = mt_rand(10, 1000);
-                    //save the path in the db column
-                    $product->picture = 'images/products/' . $imageName . $randNumber . '.' . $product->file->extension;
+                    // else save new picture
+                    $product->picture = self::setNewPicture($imageName, $product);
                 }
-
                 if ($product->save()) {
-                    $newMap['CategoryMap']['product_id'] = Yii::$app->db->getLastInsertID();
-                    foreach ($categories as $categoryId) {
-                        $newMap['CategoryMap']['category_id'] = $categoryId;
-                        if ($map->load($newMap) && $map->save()) {
-                            $map = new CategoryMap();
-                        } else {
-                            Yii::$app->getSession()->setFlash('error', 'Failed to save product/category relation ');
-                            $dbTransaction->rollBack();
-                            return false;
+                    // If categories are selected we add them to junktion table
+                    if (!empty($newProduct['Product']['category'])) {
+                        foreach ($newProduct['Product']['category'] as $categoryId) {
+                            $category = Category::findOne($categoryId);
+                            $product->link('categories', $category);
                         }
                     }
                 } else {
                     $dbTransaction->rollBack();
+                    Yii::$app->getSession()->setFlash('error', 'Product save failed !!!');
                     return false;
                 }
             } else {
@@ -120,9 +78,9 @@ class Manager {
                 Yii::$app->getSession()->setFlash('error', 'Product validation failed !!!');
                 return false;
             }
-
+            // if we have new picture we add it to table
             if (!empty($product->file)) {
-                $product->file->saveAs('images/products/' . $imageName . $randNumber . '.' . $product->file->extension);
+                $product->file->saveAs($product->picture);
             }
             $dbTransaction->commit();
             return $product->id;
@@ -132,11 +90,11 @@ class Manager {
         }
     }
 
-    public static function getDeleteList($existingValues, $postValues) {
+    public static function getDeleteList($existingValues, $postNewCategories) {
         $deleteList = [];
         // Rows that we no longer need
         foreach ($existingValues as $value) {
-            if (!in_array($value, $postValues)) {
+            if (!in_array($value, $existingValues)) {
                 $deleteList[] = $value;
             }
         }
@@ -144,17 +102,43 @@ class Manager {
         return $deleteList;
     }
 
-    public static function getNewIndexList($existingValues, $postValues) {
+    public static function getNewIndexList($existingValues, $postNewCategories) {
         $newIndexList = [];
 
         //Rows that we will need to create
-        foreach ($postValues as $value) {
+        foreach ($postNewCategories as $value) {
             if (!in_array($value, $existingValues)) {
                 $newIndexList[] = $value;
             }
         }
 
         return $newIndexList;
+    }
+
+    public static function setNewPicture($imageName, $product) {
+        $randNumber = mt_rand(10, 1000);
+        $tempImageName = 'images/products/' . $imageName . $randNumber . '.' . $product->file->extension;
+        $files = FileHelper::findFiles('images/products/');
+
+        while (true) {
+            if (self::verifyPictureName($tempImageName, $files)) {
+                return $tempImageName;
+            } else {
+                $randNumber = mt_rand(10, 1000);
+                $previousName = explode('.', $tempImageName);
+                $previousName[0] .= '/' . $randNumber . '.' . $product->file->extension;
+                $tempImageName = $previousName[0];
+            }
+        }
+    }
+
+    protected static function verifyPictureName($tempImageName, $files) {
+        foreach ($files as $picture) {
+            if ($picture == $tempImageName) {
+                return false;
+            }
+        }
+        return true;
     }
 
 }

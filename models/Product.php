@@ -22,6 +22,7 @@ class Product extends \yii\db\ActiveRecord {
      * @inheritdoc
      */
     public $file;
+    public $category;
 
     public static function tableName() {
         return 'Product';
@@ -53,6 +54,7 @@ class Product extends \yii\db\ActiveRecord {
             'picture' => 'Picture',
             'price' => 'Price',
             'file' => 'Picture',
+            'category' => 'List of categories'
         ];
     }
 
@@ -61,6 +63,12 @@ class Product extends \yii\db\ActiveRecord {
      */
     public function getCategoryMaps() {
         return $this->hasMany(CategoryMap::className(), ['product_id' => 'id'])->with(['category']);
+    }
+    
+       public function getCategories()
+    {
+        return $this->hasMany(Category::className(), ['id' => 'category_id'])
+                ->viaTable('CategoryMap', ['product_id'=>'id']);
     }
 
     public function getProductCategories() {
@@ -82,13 +90,16 @@ class Product extends \yii\db\ActiveRecord {
     {
         $categoryIndexes = [];
         $relationData = $this->categoryMaps;
-         if (count($relationData) > 1) {
+
+        if (count($relationData) > 1) {
             foreach ($relationData as $key => $object) {
                 $categoryIndexes[] = $object->category->id;
             }
             return $categoryIndexes;
-        } else {
+        } elseif ($relationData == 0) {
             $categoryIndexes[] = $relationData[0]->category->id;
+            return $categoryIndexes;
+        } else {
             return $categoryIndexes;
         }
     }

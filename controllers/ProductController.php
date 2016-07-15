@@ -102,14 +102,11 @@ class ProductController extends Controller
        $postData = Yii::$app->request->post();
        $newId=''; 
        $manager = new Manager();
-       
-        if (isset($postData['_csrf']) && isset($postData['Product']) && isset($postData['Category'])) {
-            $newProduct['_csrf'] = $postData['_csrf'];
-            $newProduct['Product'] = $postData['Product'];
-            $newMap['_csrf'] = $postData['_csrf'];
-            $categories = $postData['Category']['name'];
             
-            $newId = $manager->createProductWithCategory($newProduct, $newMap, $categories);
+        if (isset($postData['Product'])) {
+            $newProduct['Product'] = $postData['Product'];
+            // Create new product and return new product id for view redirect
+            $newId = $manager->createProductWithCategory($newProduct);
             if ($newId) {
                 return $this->redirect(['view', 'id' =>$newId ]);
             } else {
@@ -133,39 +130,41 @@ class ProductController extends Controller
     public function actionUpdate($id) {
         $product = $this->findModel($id);
         $category = new Category();
-        $newRelaionId = '';
-        $newProductId = '';
+        $previousPicture = '';
+        $emptyFile = false;
 
         if (Yii::$app->request->post()) {
             $updatedData = Yii::$app->request->post();
             $updatedProduct = [];
-            $previousPicture = $product->picture;
             $updatedProduct['Product'] = $updatedData['Product'];
-            $updatedProduct['_csrf'] = $updatedData['_csrf'];    
             $manager = new Manager();
 
-            if (!($product->CategoryIndexes == $updatedData['Category']['name'])) {
-                $newRelaionId = $manager->updateProductCategories($product->CategoryIndexes, $updatedData['Category']['name'], $product->ProductId);
-                if (($newRelaionId) && (($product->name == $updatedData['Product']['name']) && ($product->description == $updatedData['Product']['description']) 
-                        && ($product->price == $updatedData['Product']['price']) && (empty(UploadedFile::getInstance($product, 'file'))))) {
-                    return $this->redirect(['view', 'id' => $newRelaionId]);
-                } else {
-                    $newProductId = $manager->updateProduct($updatedProduct, $product);
-                    if ($newProductId) {
-                        return $this->redirect(['view', 'id' => $newProductId]);
-                    } else {
-                        Yii::$app->getSession()->setFlash('error', 'Failed to update Product !!!');
-                        return $this->redirect(['update']);
-                    }
+            // check if picture was not change 
+            // Set emptyFile to "TRUE" if changed
+            $previousPicture = $product->picture; 
+            if (!empty(UploadedFile::getInstance($product, 'file'))) {
+                $imageName = strtolower($product->name);
+                $product->file = UploadedFile::getInstance($product, 'file');
+                $updatedProduct['Product']['picture'] = $manager->setNewPicture($imageName, $product);
+                $emptyFile = true;
+            }else{
+                $updatedProduct['Product']['picture'] = $previousPicture;
+            }
+            // Check if during the update User change the categories
+            if (!($product->CategoryIndexes == $updatedData['Product']['category'])) {               
+                $categoryUpdateStatus = $manager->updateProductCategories($product->CategoryIndexes, $updatedData['Product']['category'], $product, $product->id);
+                if(!$categoryUpdateStatus){
+                     return $this->redirect(['create']);
                 }
-            } else {
-                $newProductId = $manager->updateProduct($updatedProduct, $product);
-                if ($newProductId) {
-                    return $this->redirect(['view', 'id' => $newProductId]);
-                } else {
-                    Yii::$app->getSession()->setFlash('error', 'Failed to update Product !!!');
-                    return $this->redirect(['update']);
+            } 
+            // Load updated product
+           if ($product->load($updatedProduct) && $product->save()) {           
+                if ($emptyFile) {
+                    $product->file = UploadedFile::getInstance($product, 'file');
+                    $product->file->saveAs($product->picture);
+                    unlink(Yii::$app->basePath . '/web/' . $previousPicture);
                 }
+                return $this->redirect(['view', 'id' => $product->id]);
             }
         } else {
             return $this->render('update', [

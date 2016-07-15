@@ -2,6 +2,8 @@
 
 namespace app\models;
 
+use app\models\Product;
+
 use Yii;
 
 /**
@@ -29,7 +31,7 @@ class Category extends \yii\db\ActiveRecord
     {
         return [
             [['name'],'required'],
-            ['name', 'validateCategoryName']
+            [['name'], 'string','min'=>3]
             
         ];
     }
@@ -53,7 +55,13 @@ class Category extends \yii\db\ActiveRecord
         return $this->hasMany(CategoryMap::className(), ['category_id' => 'id']);
     }
     
-    public function validateCategoryName($attribute, $params) {
+     public function getProducts()
+    {
+        return $this->hasMany(Product::className(), ['id' => 'product_id'])
+                ->viaTable('CategoryMap', ['category_id'=>'id']);
+    }
+    
+   /* public function validateCategoryName($attribute, $params) {
         if (is_array($this->$attribute)) {
             foreach ($this->$attribute as $value) {
                 if (!is_string($value)) {
@@ -63,6 +71,6 @@ class Category extends \yii\db\ActiveRecord
         } elseif (!is_string($this->$attribute)) {
             $this->addError($attribute, 'Category name is not valid');
         }
-    }
+    }*/
 
 }
